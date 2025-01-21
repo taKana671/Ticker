@@ -112,6 +112,7 @@ class DisplayMessage(ShowBase):
         self.display_cam = NodePath(Camera('cam3d'))
         aspect_ratio = self.calc_aspect_ratio(region_size)
         self.display_cam.node().get_lens().set_aspect_ratio(aspect_ratio)
+        self.display_cam.node().get_lens().set_fov(60)
         region.set_camera(self.display_cam)
         self.camNode.set_active(False)
 
@@ -133,6 +134,10 @@ class DisplayMessage(ShowBase):
         self.color_change = True
 
     def update(self, task):
+        if self.gui.entered_text:
+            self.ticker.change_message(self.gui.entered_text)
+            self.gui.entered_text = ''
+
         return task.cont
 
 

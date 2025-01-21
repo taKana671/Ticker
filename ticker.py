@@ -5,7 +5,8 @@ import numpy as np
 
 from panda3d.core import NodePath, PandaNode
 from panda3d.core import Point3, Vec3, PTA_uchar, CPTA_uchar, LColor
-from panda3d.core import Texture, TextureStage, TransformState
+from panda3d.core import Texture, TextureStage, TransformState, TransparencyAttrib
+from direct.interval.IntervalGlobal import Sequence, Func
 
 from shapes.src import Box, Cylinder
 
@@ -35,82 +36,83 @@ class Ticker(NodePath):
         self.set_pos(Point3(0, 0, 0))
 
         self.create_ticker()
-        self.create_texture()
         self.hprInterval(10, Vec3(-360, 0, 0)).loop()
 
     def create_ticker(self):
-        self.board = CylinderModel(radius=1.9, height=1.2)
+        self.board = CylinderModel(radius=3.9, height=1.2)
+        # self.board = CylinderModel(radius=2, height=1)
         self.board.set_texture(base.loader.load_texture('textures/concrete_01.jpg'))
         self.board.reparent_to(self)
         self.board.set_pos(Point3(0, 0, 0))
 
-        self.outer = CylinderModel(radius=2.0, height=1.0)
+        self.outer = CylinderModel(radius=4.0, height=1.1)
         self.outer.reparent_to(self)
-        # self.outer.set_transform(TransformState.make_hpr(Vec3(0, 180, 0)))
-        self.outer.set_pos(Point3(0, 0, 0.1))
-        # self.outer.set_pos_hpr(Point3(0, 0, 0), Vec3(0, 360, 0))
+        self.outer.set_pos(Point3(0, 0, 0))
+        self.outer.set_transparency(TransparencyAttrib.M_alpha)
 
-    def create_texture(self):
-        arr_1 = np.zeros((256, 256 * 5, 3), dtype=np.uint8)
-        arr_1[:, :, 0] = 255
-        # cv2.putText(arr_1, 'JIHGFEDCBA', (50, 20), cv2.FONT_HERSHEY_DUPLEX, 1.0, (255, 255, 255))
-        self.tex = Texture('image')
-
-        arr = np.zeros((256, 256 * 5, 3), dtype=np.uint8)
-        arr[:, :, 0] = 255
         msg = 'Hello everyone! Lets study.'
-        # msg = msg[::-1]
-        cv2.putText(arr, msg, (0, 100), cv2.FONT_HERSHEY_DUPLEX, 1.5, (255, 255, 255), thickness=2)
-        arr = cv2.rotate(arr, cv2.ROTATE_180)
-        arr = cv2.flip(arr, 1)
-
-        arr = np.concatenate([arr, arr_1])
-        cv2.imwrite('test.png', arr)
-
+        img = self.create_image(msg)
         self.tex = Texture('image')
         self.tex.setup_2d_texture(
-            256*5, 256* 2, Texture.T_unsigned_byte, Texture.F_rgb)
-        # self.tex.set_ram_image(arr)
-        self.tex.set_ram_image_as(arr, "RGB")
-
-        ts = TextureStage('ts')
-        self.outer.set_texture(self.tex)
-        # self.outer.set_tex_offset(TextureStage.get_default(), 20, -10)
-
-        
-        # ************************************************
-        # arr = np.zeros((256, 256, 3), dtype=np.uint8)
-        # arr[:, :, 0] = 255
-        # cv2.putText(arr, 'ABCDEFGHIJ', (20, 50), cv2.FONT_HERSHEY_DUPLEX, 1.0, (255, 255, 255))
-        # self.tex = Texture('image')
-        # self.tex.setup_2d_texture(256, 256, Texture.T_unsigned_byte, Texture.F_rgb)
-        # # self.tex.set_ram_image(arr)
+            256 * 20, 256 * 2, Texture.T_unsigned_byte, Texture.F_rgb)
+        self.tex.set_ram_image(img)
         # self.tex.set_ram_image_as(arr, "RGB")
-        # self.model.set_texture(self.tex)
-        # # self.mem = memoryview(arr)
-        # # self.mem = memoryview(self.tex.modify_ram_image())
-        # ************************************************
+        self.outer.set_texture(self.tex)
+        self.mem = memoryview(self.tex.modify_ram_image())
 
-    def change_message(self):
-        pass
-        # if self.color_change:
-        #     # arr = np.zeros((256, 256, 3), dtype=np.uint8)
-        #     # arr[:, :, 1] = 255
-        #     # cv2.putText(arr, 'KLMNOPQ', (20, 50), cv2.FONT_HERSHEY_DUPLEX, 1.0, (255, 255, 255))
-        #     # self.tex.clear_ram_image()
-        #     # self.tex.set_ram_image_as(arr, "RGB")
-        #     # # self.box.set_texture(self.tex)
+    def create_image(self, msg):
+        # msg = msg[::-1]
+        msg = msg + '  '
+
+        face = cv2.FONT_HERSHEY_DUPLEX
+        height = 50
+        thickness = 3
+        scale = cv2.getFontScaleFromHeight(face, height, thickness)
+        (width, _), baseline = cv2.getTextSize(msg, face, scale, thickness)
+
+        n = len(msg)                    # word count of message
+        char_w = width // n             # pixel count of one word
+        char_cnt = 256 * 20 // char_w   # the word count which ticker can display
+        msg_cnt = char_cnt // n         # repeat count of the message
+        x = char_cnt - msg_cnt * n
+        li = [(x + i) // msg_cnt for i in range(msg_cnt)]
+
+        # length = 256 * 20
+        # n = length // width
+        # x = length - n * width
+        # li = [(x + i) // n for i in range(n)]
+        msgs = ''
+        for num in li:
+            msgs += msg + ' ' * num
+
+        # cnt = (256 * 20) // width
+        # msg *= cnt
+
+        arr_1 = np.zeros((256, 256 * 20, 3), dtype=np.uint8)
+        arr_1[:, :, 0] = 255
+
+        arr_2 = np.zeros((256, 256 * 20, 3), dtype=np.uint8)
+        arr_2[:, :, 0] = 255
+        cv2.putText(arr_2, msgs, (0, 100), face, scale, (255, 255, 255), thickness=thickness)
+        arr_2 = cv2.rotate(arr_2, cv2.ROTATE_180)
+        arr_2 = cv2.flip(arr_2, 1)
+
+        img = np.concatenate([arr_2, arr_1])
+        cv2.imwrite('test.png', img)
+        return img
+
+    def change_image(self, msg):
+        img = self.create_image(msg)
+        self.mem[:] = np.ravel(img)
+        self.tex.set_ram_image(self.mem)
+        # self.tex.set_ram_image_as(self.mem, "RGB")
+        self.outer.set_texture(self.tex)
+
+    def change_message(self, msg):
+        Sequence(
+            self.outer.colorScaleInterval(2, 0, 1, blendType='easeInOut'),
+            Func(self.change_image, msg),
+            self.outer.colorScaleInterval(2, 1, 0, blendType='easeInOut')
+        ).start()
 
 
-        #     # self.mem = memoryview(self.tex.modify_ram_image())
-        #     # # self.mem[] = arr
-        #     # # import pdb; pdb.set_trace()
-        #     # for i in range(len(self.mem)):
-        #     #     # import pdb; pdb.set_trace()
-        #     #     if i % 3 == 0:
-        #     #         self.mem[i] = 255
-
-        #     self.tex.set_ram_image(self.mem)
-        #     # self.tex.set_ram_image_as(self.mem, "RGB")
-        #     self.model.set_texture(self.tex)
-        #     self.color_change = False
