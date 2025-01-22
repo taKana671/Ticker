@@ -9,7 +9,7 @@ from panda3d.core import OrthographicLens, Camera, MouseWatcher, PGTop
 from panda3d.core import Shader, TextureStage, TransparencyAttrib
 from direct.gui.DirectGui import DirectFrame, DirectLabel, DirectEntry
 
-from ticker import Ticker
+from ticker import CircularTicker
 
 
 class DisplayMessage(ShowBase):
@@ -24,7 +24,7 @@ class DisplayMessage(ShowBase):
         self.display_root = NodePath('camera_root')
         self.display_root.reparent_to(self.render)
 
-        self.ticker = Ticker()
+        self.ticker = CircularTicker()
         self.ticker.reparent_to(self.display_root)
 
         self.create_display_region()
@@ -32,7 +32,7 @@ class DisplayMessage(ShowBase):
         self.gui = Gui()
 
         self.color_change = False
-        self.camera.look_at(self.ticker.outer)
+        self.camera.look_at(self.ticker.outer.model)
 
         self.accept('d', self.start_change)
         self.accept('escape', sys.exit)
@@ -116,7 +116,8 @@ class DisplayMessage(ShowBase):
         region.set_camera(self.display_cam)
         self.camNode.set_active(False)
 
-        self.display_cam.set_pos(-10, -5, 3)
+        # self.display_cam.set_pos(-10, -5, 3)
+        self.display_cam.set_pos(-10, -10, 3)
         # self.display_cam.set_pos(Point3(0, self.img_size.y * -1, 200))
         self.display_cam.look_at(Point3(0, 0, 0))
         self.display_cam.reparent_to(self.display_root)
