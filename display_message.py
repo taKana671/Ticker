@@ -8,6 +8,7 @@ from panda3d.core import Point3, Vec3, PTA_uchar, CPTA_uchar, LColor, Vec4
 from panda3d.core import OrthographicLens, Camera, MouseWatcher, PGTop
 from panda3d.core import Shader, TextureStage, TransparencyAttrib
 from direct.gui.DirectGui import DirectFrame, DirectLabel, DirectEntry
+from direct.showbase.ShowBaseGlobal import globalClock
 
 from ticker import CircularTicker
 
@@ -32,7 +33,8 @@ class DisplayMessage(ShowBase):
         self.gui = Gui()
 
         self.color_change = False
-        self.camera.look_at(self.ticker.outer.model)
+        # self.camera.look_at(self.ticker.outer.model)
+        self.camera.look_at(Point3(0, 0, 0))
 
         self.accept('d', self.start_change)
         self.accept('escape', sys.exit)
@@ -135,6 +137,9 @@ class DisplayMessage(ShowBase):
         self.color_change = True
 
     def update(self, task):
+        dt = globalClock.get_dt()
+        self.ticker.update(dt)
+
         if self.gui.entered_text:
             self.ticker.change_message(self.gui.entered_text)
             self.gui.entered_text = ''
