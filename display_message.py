@@ -10,7 +10,8 @@ from panda3d.core import Shader, TextureStage, TransparencyAttrib
 from direct.gui.DirectGui import DirectFrame, DirectLabel, DirectEntry
 from direct.showbase.ShowBaseGlobal import globalClock
 
-from ticker import CircularTicker
+from circular_ticker import CircularTicker
+from square_ticker import SquareTicker
 
 
 class DisplayMessage(ShowBase):
@@ -25,7 +26,9 @@ class DisplayMessage(ShowBase):
         self.display_root = NodePath('camera_root')
         self.display_root.reparent_to(self.render)
 
-        self.ticker = CircularTicker()
+        # self.ticker = CircularTicker()
+
+        self.ticker = SquareTicker()
         self.ticker.reparent_to(self.display_root)
 
         self.create_display_region()
@@ -138,7 +141,7 @@ class DisplayMessage(ShowBase):
 
     def update(self, task):
         dt = globalClock.get_dt()
-        self.ticker.update(dt)
+        # self.ticker.update(dt)
 
         if self.gui.entered_text:
             self.ticker.change_message(self.gui.entered_text)
@@ -180,9 +183,9 @@ class Gui(DirectFrame):
         )
 
     def set_entered_text(self, entered_text):
-        if entered_text:
-            self.entered_text = entered_text
-            print(self.entered_text)
+        if text := entered_text.strip():
+            self.entered_text = text
+            print(f'entered message: {self.entered_text}')
 
 
 
