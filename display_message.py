@@ -27,7 +27,6 @@ class DisplayMessage(ShowBase):
         self.display_root.reparent_to(self.render)
 
         # self.ticker = CircularTicker()
-
         self.ticker = SquareTicker()
         self.ticker.reparent_to(self.display_root)
 
@@ -141,7 +140,7 @@ class DisplayMessage(ShowBase):
 
     def update(self, task):
         dt = globalClock.get_dt()
-        # self.ticker.update(dt)
+        self.ticker.update(dt)
 
         if self.gui.entered_text:
             self.ticker.change_message(self.gui.entered_text)

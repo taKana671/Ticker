@@ -49,19 +49,18 @@ class CylinderModel(NodePath):
 
 class TickerDisplay:
 
-    def __init__(self, model, size, default_msg, height=60, thickness=3, outer=True):
+    def __init__(self, model, size, default_msg, pixel_height=60, thickness=3, outer=True):
         self.model = model
         self.size = size  # 256 * 20, 256 * 2, 3
         self.outer = outer
-        self.face = cv2.FONT_HERSHEY_DUPLEX
-        self.height = height
+        self.font_face = cv2.FONT_HERSHEY_DUPLEX
         self.thickness = thickness
-        self.scale = cv2.getFontScaleFromHeight(self.face, self.height, self.thickness)
+        self.scale = cv2.getFontScaleFromHeight(
+            self.font_face, pixel_height, self.thickness)
         self.text_color = (255, 255, 255)
         self.line_color = (255, 105, 65)
         self.initialize(default_msg)
 
-        self.process_row = None
         self.next_img = None
 
     def initialize(self, default_msg):
@@ -74,14 +73,18 @@ class TickerDisplay:
             Texture.F_rgb
         )
 
-        img = self.create_image(default_msg, lines=True)
+        repeated_msg = self.repeat_msg(default_msg)
+        img = self.create_image(repeated_msg, lines=True)
         self.tex.set_ram_image(img)
         self.model.set_texture(self.tex)
         self.mem_view = memoryview(self.tex.modify_ram_image())
 
-    def create_image(self, msg, lines=False):
+    # ##########################################################
+
+    def repeat_msg(self, msg):
         msg = msg + '  '
-        (width, height), baseline = cv2.getTextSize(msg, self.face, self.scale, self.thickness)
+        # cv2.getTextSize returns: (width, height), baseline
+        (width, _), _ = cv2.getTextSize(msg, self.font_face, self.scale, self.thickness)
         n = len(msg)                                      # word count of message
         char_w = width // n                               # pixel count of each word
         char_cnt = self.size.x // char_w                  # how many words the ticker can display
@@ -89,17 +92,31 @@ class TickerDisplay:
         x = char_cnt - msg_cnt * n                        # the number of spaces
         li = [(x + i) // msg_cnt for i in range(msg_cnt)]
 
-        msgs = ''
+        repeated_msg = ''
         for num in li:
-            msgs += msg + ' ' * num
+            repeated_msg += msg + ' ' * num
 
-        msg_y = 260
-        self.msg_btm = msg_y - baseline - 4
-        self.msg_top = msg_y + height
+        return repeated_msg
 
+    def get_min_max_rows(self, img):
+        idxes = np.where(np.all(img == self.text_color, axis=2))[0]
+        return idxes[-1], idxes[0]
+
+    # ##########################################################
+
+    def create_image(self, msg, lines=False):
         img = np.zeros(self.size.arr, dtype=np.uint8)
         img[:, :, 0] = 255
-        cv2.putText(img, msgs, (0, msg_y), self.face, self.scale, self.text_color, thickness=self.thickness)
+
+        cv2.putText(
+            img,
+            msg,
+            (0, 260),
+            self.font_face,
+            self.scale,
+            self.text_color,
+            thickness=self.thickness
+        )
         img = cv2.rotate(img, cv2.ROTATE_180)
 
         if self.outer:
@@ -107,7 +124,16 @@ class TickerDisplay:
 
         if lines:
             for y in [40, 480]:
-                cv2.line(img, (0, y), (self.size.x, y), self.line_color, thickness=6, lineType=cv2.LINE_AA)
+                cv2.line(
+                    img,
+                    (0, y),
+                    (self.size.x, y),
+                    self.line_color,
+                    thickness=6,
+                    lineType=cv2.LINE_AA
+                )
+
+        self.msg_top, self.msg_btm = self.get_min_max_rows(img)
 
         return img
 
@@ -127,6 +153,8 @@ class TickerDisplay:
     def show_msg(self, row_cnt):
         if (process_r := self.msg_top - row_cnt) < self.msg_btm or \
                 process_r > self.msg_top:
+
+            self.next_img = None
             return True
 
         start = process_r * self.size.row_length
@@ -141,7 +169,8 @@ class TickerDisplay:
         self.model.set_texture(self.tex)
 
     def prepare_image(self, msg):
-        img = self.create_image(msg)
+        repeated_msg = self.repeat_msg(msg)
+        img = self.create_image(repeated_msg)
         self.next_img = np.ravel(img)
 
 
@@ -212,7 +241,8 @@ class CircularTicker(NodePath):
         self.counter += 1
 
     def update(self, dt):
-        angle = dt * 25
+        angle = dt * 20
+        # In this case, hprInterval is not good
         self.ticker.set_h(self.ticker.get_h() - angle)
 
         match self.process:
