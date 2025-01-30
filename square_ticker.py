@@ -17,6 +17,7 @@ class Process(Enum):
 
     DELETE = auto()
     DISPLAY = auto()
+    PREPARE = auto()
 
 
 class Size(NamedTuple):
@@ -63,7 +64,6 @@ class TickerDisplay:
         self.msg_offset = 0
         self.initialize(default_msg)
 
-        self.current_msg = default_msg
         self.next_msg = None
 
     def initialize(self, default_msg):
@@ -136,20 +136,43 @@ class TickerDisplay:
     def del_msg(self, row_cnt):
         """row_cnt: must be 0 or more.
         """
-        if row_cnt > (self.msg_top - self.msg_btm) / 2:
+        if (self.msg_top - self.msg_btm) < row_cnt * 2:
             return True
 
         process_rs = set(
             [self.msg_top - row_cnt, self.msg_btm + row_cnt]
         )
 
-        for r in process_rs:
-            start = r * self.size.row_length
+        for process_r in process_rs:
+            start = process_r * self.size.row_length
             end = start + self.size.row_length
             li = [0, 0, 0] * self.size.x
             self.mem_view[start:end] = struct.pack('B' * len(li), *li)
 
         self.setup_image()
+
+    def show_msg(self, row_cnt):
+        """row_cnt: must be 0 or more.
+        """
+        if (n := (self.msg_top - self.msg_btm) // 2 - row_cnt) < 0:
+            self.next_img = None
+            return True
+
+        process_rs = set(
+            [self.msg_btm + n, self.msg_top - n]
+        )
+
+        for process_r in process_rs:
+            start = process_r * self.size.row_length
+            end = start + self.size.row_length
+            li = self.next_img[start:end]
+            self.mem_view[start:end] = struct.pack('B' * len(li), *li)
+            self.setup_image()
+
+    def prepare_image(self, msg):
+        repeated_msg = self.repeat_msg(msg)
+        img = self.create_image(repeated_msg)
+        self.next_img = np.ravel(img)
 
     def setup_image(self):
         self.tex.set_ram_image(self.mem_view)
@@ -165,6 +188,7 @@ class SquareTicker(NodePath):
         self.set_pos_hpr(Point3(0, 0, -5), Vec3(90, 0, 0))
         self.create_ticker()
 
+        self.next_msg = None
         self.process = None
         self.counter = 0
 
@@ -192,12 +216,24 @@ class SquareTicker(NodePath):
 
     def change_message(self, msg):
         self.process = Process.DELETE
-        # self.ticker_display.prepare_image(msg)
+        self.next_msg = msg
 
     def del_old_msg(self):
         if self.ticker_display.del_msg(self.counter):
             self.counter = 0
             return True
+
+        self.counter += 1
+
+    def prepare_new_msg(self):
+        self.ticker_display.prepare_image(self.next_msg)
+        self.next_msg = None
+
+    def show_new_msg(self):
+        if self.ticker_display.show_msg(self.counter):
+            self.counter = 0
+            return True
+
         self.counter += 1
 
     def update(self, dt):
@@ -207,10 +243,12 @@ class SquareTicker(NodePath):
 
             case Process.DELETE:
                 if self.del_old_msg():
-                    self.process = None
+                    self.process = Process.PREPARE
+
+            case Process.PREPARE:
+                self.prepare_new_msg()
+                self.process = Process.DISPLAY
 
             case Process.DISPLAY:
-                pass
-
-
-
+                if self.show_new_msg():
+                    self.process = None

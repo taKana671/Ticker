@@ -16,6 +16,7 @@ class Process(Enum):
 
     DELETE = auto()
     DISPLAY = auto()
+    PREPARE = auto()
 
 
 class Size(NamedTuple):
@@ -153,7 +154,6 @@ class TickerDisplay:
     def show_msg(self, row_cnt):
         if (process_r := self.msg_top - row_cnt) < self.msg_btm or \
                 process_r > self.msg_top:
-
             self.next_img = None
             return True
 
@@ -183,6 +183,7 @@ class CircularTicker(NodePath):
         self.create_framework()
         self.create_ticker()
 
+        self.next_msg = None
         self.process = None
         self.counter = 0
 
@@ -224,15 +225,19 @@ class CircularTicker(NodePath):
 
     def change_message(self, msg):
         self.process = Process.DELETE
-
-        for t in self.ticker_displays:
-            t.prepare_image(msg)
+        self.next_msg = msg
 
     def del_old_msg(self):
         if all([t.del_msg(self.counter) for t in self.ticker_displays]):
             self.counter = 0
             return True
         self.counter += 1
+
+    def prepare_new_msg(self):
+        for t in self.ticker_displays:
+            t.prepare_image(self.next_msg)
+
+        self.next_msg = None
 
     def show_new_msg(self):
         if all([t.show_msg(self.counter) for t in self.ticker_displays]):
@@ -249,7 +254,11 @@ class CircularTicker(NodePath):
 
             case Process.DELETE:
                 if self.del_old_msg():
-                    self.process = Process.DISPLAY
+                    self.process = Process.PREPARE
+
+            case Process.PREPARE:
+                self.prepare_new_msg()
+                self.process = Process.DISPLAY
 
             case Process.DISPLAY:
                 if self.show_new_msg():
