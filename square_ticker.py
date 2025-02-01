@@ -6,10 +6,12 @@ import cv2
 import numpy as np
 
 from panda3d.core import NodePath, PandaNode
-from panda3d.core import Point3, Vec3, LColor
+from panda3d.core import Point3, Vec3, LColor, CardMaker
 from panda3d.core import Texture, TextureStage
 from direct.interval.LerpInterval import LerpTexOffsetInterval
+from panda3d.core import Spotlight
 
+from lights import BasicAmbientLight
 from shapes.src import Box
 
 
@@ -185,32 +187,69 @@ class SquareTicker(NodePath):
     def __init__(self):
         super().__init__(PandaNode('square_ticker'))
         self.reparent_to(base.render)
-        self.set_pos_hpr(Point3(0, 0, -5), Vec3(90, 0, 0))
+        # self.set_pos_hpr(Point3(0, 5, -5), Vec3(90, 0, 0))
+        self.set_pos_hpr(Point3(5, 5, -5), Vec3(90, 0, 0))
         self.create_ticker()
 
         self.next_msg = None
         self.process = None
         self.counter = 0
 
+        ambient_light = BasicAmbientLight()
+
     def create_ticker(self):
+        # make building
         self.building = NodePath('building')
         self.building.reparent_to(self)
 
         model = BoxModel('building', width=10, depth=10, height=15)
-        # model.set_pos_hpr(Point3(0, 0, -2), Vec3(90, 0, 0))
-        model.reparent_to(self.building)
         model.set_texture(base.loader.load_texture('textures/tile_05.jpg'))
+        model.reparent_to(self.building)
 
+        # make billboards
+        self.billboard = NodePath('billboard')
+        self.billboard.set_z(2.5)
+        self.billboard.reparent_to(self.building)
+
+        boards = [
+            [Point3(0, 5.2, 0), Vec3(180, 0, 0)],
+            [Point3(-5.2, 0, 0), Vec3(270, 0, 0)]
+        ]
+
+        for pos, hpr in boards:
+            card = CardMaker('card')
+            card.set_frame(-4, 4, -2, 2)
+            board = self.billboard.attach_new_node(card.generate())
+            board.set_pos_hpr(pos, hpr)
+            board.set_texture(base.loader.load_texture('textures/panda3d_logo_2.png'))
+            board.setShaderAuto()
+
+        # make ticker display
         self.ticker = NodePath('ticker')
-        # msg = 'Panda3D great engine for realtime 3D games.'
-        msg = 'Panda3D'
-        # size = Size(256 * 20, 256 * 2, 3)
-        size = Size(256 * 12, 256 * 2, 3)
-        model = BoxModel('ticker', width=10.5, depth=10.5, height=1, open_top=True, open_bottom=True)
+        model = BoxModel('ticker_display', width=10.5, depth=10.5, height=1, open_top=True, open_bottom=True)
         model.reparent_to(self.ticker)
+        self.ticker.set_z(6)
+        self.ticker.reparent_to(self.building)
+
+        msg = 'Panda3D'
+        size = Size(256 * 12, 256 * 2, 3)
         self.ticker_display = TickerDisplay(model, size, msg)
-        self.ticker.set_pos(Point3(0, 0, 6))
-        self.ticker.reparent_to(self)
+
+        spot_light = base.render.attach_new_node(Spotlight('spotlight'))
+        spot_light.node().set_color(LColor(1, 1, 1, 1))
+        spot_light.node().set_attenuation(Vec3(0, 0, 0.001))
+        # spot_light.node().set_attenuation(Vec3(0, 0, 0.1))
+        spot_light.node().set_exponent(50)
+        # spot_light.node().set_attenuation(Vec3(1, 0, 0))
+        # spot_light.node().set_exponent(20)
+        spot_light.node().get_lens().set_fov(30)
+        spot_light.node().get_lens().set_near_far(1, 10)
+        spot_light.set_pos_hpr(self.building, Vec3(-5.6, 0, 8), Vec3(90, -90, 0))
+        spot_light.node().show_frustum()
+        spot_light.node().set_shadow_caster(True)
+        # base.render.set_light(spot_light)
+        # base.render.setShaderAuto()
+        board.set_light(spot_light)
 
         # LerpTexOffsetInterval(model, 5, (1, 0), (0, 0)).loop()
 

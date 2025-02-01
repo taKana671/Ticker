@@ -12,6 +12,7 @@ from direct.showbase.ShowBaseGlobal import globalClock
 
 from circular_ticker import CircularTicker
 from square_ticker import SquareTicker
+from vertical_ticker import VerticalTicker
 
 
 class DisplayMessage(ShowBase):
@@ -27,7 +28,8 @@ class DisplayMessage(ShowBase):
         self.display_root.reparent_to(self.render)
 
         # self.ticker = CircularTicker()
-        self.ticker = SquareTicker()
+        # self.ticker = SquareTicker()
+        self.ticker = VerticalTicker()
         self.ticker.reparent_to(self.display_root)
 
         self.create_display_region()
@@ -120,8 +122,8 @@ class DisplayMessage(ShowBase):
         region.set_camera(self.display_cam)
         self.camNode.set_active(False)
 
-        # self.display_cam.set_pos(-10, -5, 3)
-        self.display_cam.set_pos(-10, -10, 3)
+        self.display_cam.set_pos(-10, -5, 3)
+        # self.display_cam.set_pos(-10, -10, 3)  # 3
         # self.display_cam.set_pos(Point3(0, self.img_size.y * -1, 200))
         self.display_cam.look_at(Point3(0, 0, 0))
         self.display_cam.reparent_to(self.display_root)

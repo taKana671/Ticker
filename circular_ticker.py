@@ -10,6 +10,7 @@ from panda3d.core import Point3, Vec3, LColor
 from panda3d.core import Texture
 
 from shapes.src import Cylinder
+from lights import BasicAmbientLight
 
 
 class Process(Enum):
@@ -186,6 +187,8 @@ class CircularTicker(NodePath):
         self.next_msg = None
         self.process = None
         self.counter = 0
+
+        ambient_light = BasicAmbientLight()
 
     def create_framework(self):
         self.framework = NodePath("framework")
