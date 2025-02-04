@@ -84,20 +84,22 @@ class TickerDisplay:
     # ##########################################################
 
     def repeat_msg(self, msg):
-        msg = msg + '  '
+        msg = msg + ' '
         # cv2.getTextSize returns: (width, height), baseline
         (width, _), _ = cv2.getTextSize(msg, self.font_face, self.scale, self.thickness)
         n = len(msg)                                      # word count of message
-        char_w = width // n                               # pixel count of each word
+        char_w = width // n                               # average pixel count of each word
         char_cnt = self.size.x // char_w                  # how many words the ticker can display
         msg_cnt = char_cnt // n                           # repeat count of the message
         x = char_cnt - msg_cnt * n                        # the number of spaces
+
         li = [(x + i) // msg_cnt for i in range(msg_cnt)]
 
         repeated_msg = ''
         for num in li:
             repeated_msg += msg + ' ' * num
 
+        print(repeated_msg)
         return repeated_msg
 
     def get_min_max_rows(self, img):

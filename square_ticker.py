@@ -107,6 +107,8 @@ class TickerDisplay:
         idxes = np.where(np.all(img == self.text_color, axis=2))[0]
         return idxes[-1], idxes[0]
 
+    # ##########################################################
+
     def create_image(self, msg):
         img = np.zeros(self.size.arr, dtype=np.uint8)
 
@@ -124,8 +126,6 @@ class TickerDisplay:
         self.msg_top, self.msg_btm = self.get_min_max_rows(img)
 
         return img
-
-    # ##########################################################
 
     def move_letters(self, dt):
         # pass
