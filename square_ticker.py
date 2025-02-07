@@ -104,7 +104,10 @@ class TickerDisplay:
         return repeated_msg
 
     def get_min_max_rows(self, img):
+        # idxes = np.where(~np.all(img == [0, 0, 0], axis=2))[0]
+        # print(idxes[-1], idxes[0])
         idxes = np.where(np.all(img == self.text_color, axis=2))[0]
+        # print(idxes[-1], idxes[0])
         return idxes[-1], idxes[0]
 
     # ##########################################################
