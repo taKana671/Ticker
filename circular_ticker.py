@@ -37,8 +37,8 @@ class Size(NamedTuple):
 
 class CylinderModel(NodePath):
 
-    def __init__(self, radius, inner_radius=0, height=1, segs_top_cap=0, segs_bottom_cap=0):
-        super().__init__(PandaNode('cylinder'))
+    def __init__(self, name, radius, inner_radius=0, height=1, segs_top_cap=0, segs_bottom_cap=0):
+        super().__init__(PandaNode(name))
         self.model = Cylinder(
             radius=radius,
             inner_radius=inner_radius,
@@ -51,7 +51,7 @@ class CylinderModel(NodePath):
 
 class TickerDisplay:
 
-    def __init__(self, model, size, default_msg, pixel_height=60, thickness=3, outer=True):
+    def __init__(self, model, size, msg, pixel_height=60, thickness=3, outer=True):
         self.model = model
         self.size = size  # 256 * 20, 256 * 2, 3
         self.outer = outer
@@ -59,13 +59,16 @@ class TickerDisplay:
         self.thickness = thickness
         self.scale = cv2.getFontScaleFromHeight(
             self.font_face, pixel_height, self.thickness)
+
+        self.bg_color = (255, 0, 0)
         self.text_color = (255, 255, 255)
         self.line_color = (255, 105, 65)
-        self.initialize(default_msg)
-
+        self.speed = 10
         self.next_img = None
 
-    def initialize(self, default_msg):
+        self.initialize(msg)
+
+    def initialize(self, msg):
         self.tex = Texture('image')
 
         self.tex.setup_2d_texture(
@@ -75,52 +78,37 @@ class TickerDisplay:
             Texture.F_rgb
         )
 
-        repeated_msg = self.repeat_msg(default_msg)
-        img = self.create_image(repeated_msg, lines=True)
+        img = self.create_image(msg)
         self.tex.set_ram_image(img)
         self.model.set_texture(self.tex)
         self.mem_view = memoryview(self.tex.modify_ram_image())
-
-    # ##########################################################
-
-    def repeat_msg(self, msg):
-        msg = msg + ' '
-        # cv2.getTextSize returns: (width, height), baseline
-        (width, _), _ = cv2.getTextSize(msg, self.font_face, self.scale, self.thickness)
-        n = len(msg)                                      # word count of message
-        char_w = width // n                               # average pixel count of each word
-        char_cnt = self.size.x // char_w                  # how many words the ticker can display
-        msg_cnt = char_cnt // n                           # repeat count of the message
-        x = char_cnt - msg_cnt * n                        # the number of spaces
-
-        li = [(x + i) // msg_cnt for i in range(msg_cnt)]
-
-        repeated_msg = ''
-        for num in li:
-            repeated_msg += msg + ' ' * num
-
-        print(repeated_msg)
-        return repeated_msg
 
     def get_min_max_rows(self, img):
         idxes = np.where(np.all(img == self.text_color, axis=2))[0]
         return idxes[-1], idxes[0]
 
-    # ##########################################################
-
-    def create_image(self, msg, lines=False):
+    def create_image(self, msg, lines=True):
         img = np.zeros(self.size.arr, dtype=np.uint8)
-        img[:, :, 0] = 255
+        img[:, :, 0] = self.bg_color[0]
 
-        cv2.putText(
-            img,
-            msg,
-            (0, 260),
-            self.font_face,
-            self.scale,
-            self.text_color,
-            thickness=self.thickness
-        )
+        msg = msg + ' '
+        (width, _), _ = cv2.getTextSize(msg, self.font_face, self.scale, self.thickness)
+        msg_cnt = self.size.x // width
+        spaces = self.size.x - msg_cnt * width
+        x = 0
+
+        for i in range(msg_cnt):
+            cv2.putText(
+                img,
+                msg,
+                (x, 260),
+                self.font_face,
+                self.scale,
+                self.text_color,
+                thickness=self.thickness
+            )
+            x += width + (spaces + i) // msg_cnt
+
         img = cv2.rotate(img, cv2.ROTATE_180)
 
         if self.outer:
@@ -138,10 +126,13 @@ class TickerDisplay:
                 )
 
         self.msg_top, self.msg_btm = self.get_min_max_rows(img)
-
         return img
 
-    def del_msg(self, row_cnt):
+    def move_letters(self, dt):
+        angle = dt * self.speed
+        self.model.set_h(self.model.get_h() - angle)
+
+    def delete_msg(self, row_cnt):
         if (process_r := self.msg_btm + row_cnt) > self.msg_top or \
                 process_r < self.msg_btm:
             return True
@@ -151,10 +142,10 @@ class TickerDisplay:
         # struct is faster than ndarray.
         li = [255, 0, 0] * self.size.x
         self.mem_view[start:end] = struct.pack('B' * len(li), *li)
-        # self.mem_view[start:end] = np.array([255, 0, 0] * self.size.x, dtype=np.uint8)
         self.setup_image()
+        # self.mem_view[start:end] = np.array([255, 0, 0] * self.size.x, dtype=np.uint8)
 
-    def show_msg(self, row_cnt):
+    def display_msg(self, row_cnt):
         if (process_r := self.msg_top - row_cnt) < self.msg_btm or \
                 process_r > self.msg_top:
             self.next_img = None
@@ -171,9 +162,8 @@ class TickerDisplay:
         self.model.clear_color()
         self.model.set_texture(self.tex)
 
-    def prepare_image(self, msg):
-        repeated_msg = self.repeat_msg(msg)
-        img = self.create_image(repeated_msg)
+    def prepare_for_display(self, msg):
+        img = self.create_image(msg, lines=False)
         self.next_img = np.ravel(img)
 
 
@@ -183,82 +173,88 @@ class CircularTicker(NodePath):
         super().__init__(PandaNode('circular_ticker'))
         self.reparent_to(base.render)
         self.set_pos(Point3(0, 0, 0))
-        self.create_framework()
         self.create_ticker()
 
         self.next_msg = None
         self.process = None
         self.counter = 0
 
-        ambient_light = BasicAmbientLight()
+        # ambient_light = BasicAmbientLight()
 
-    def create_framework(self):
-        self.framework = NodePath("framework")
+    def create_ticker(self):
+        self.ticker_display = NodePath("ticker_display")
+        self.ticker_display.reparent_to(self)
+
+        framework = NodePath('framework')
+        # framework.set_texture(base.loader.load_texture('textures/concrete_01.jpg'))
+        framework.set_color(LColor(0.5, 0.5, 0.5, 1.0))
+        framework.reparent_to(self.ticker_display)
+
         rad = 4.48
         inner_rad = 4.08
 
-        ring = CylinderModel(
-            radius=rad, inner_radius=inner_rad, height=1, segs_bottom_cap=3, segs_top_cap=3)
-        ring.reparent_to(self.framework)
-        ring.set_pos(Point3(0, 0, 0))
+        model = CylinderModel(
+            'frame', radius=rad, inner_radius=inner_rad, height=1, segs_bottom_cap=3, segs_top_cap=3)
+        model.reparent_to(framework)
 
         pole_rad = (rad - inner_rad) / 2
         v = rad - pole_rad
         xy = [(0, -v), (0, v), (-v, 0), (v, 0)]
 
         for i, (x, y) in enumerate(xy):
-            pole = CylinderModel(radius=pole_rad, height=6, segs_bottom_cap=2, segs_top_cap=2)
-            pole.set_pos_hpr(Point3(x, y, 0), Vec3(0, 180, 0))
-            pole.reparent_to(self.framework)
+            model = CylinderModel(
+                f'pole_{i}', radius=pole_rad, height=6, segs_bottom_cap=2, segs_top_cap=2)
+            model.set_pos_hpr(Point3(x, y, 0), Vec3(0, 180, 0))
+            model.reparent_to(framework)
 
-        self.framework.set_color(LColor(0.5, 0.5, 0.5, 1.0))
-        self.framework.reparent_to(self)
-
-    def create_ticker(self):
-        self.ticker = NodePath('ticker')
+        ticker = NodePath('ticker')
         msg = 'Hello everyone! Lets study.'
         size = Size(256 * 20, 256 * 2, 3)
-        self.ticker_displays = []
+        self.tickers = []
 
-        for rad, is_outer in [[4.0, False], [4.5, True]]:
-            model = CylinderModel(radius=rad, height=1)
-            model.reparent_to(self.ticker)
+        for i, (rad, is_outer) in enumerate([[4.0, False], [4.5, True]]):
+            model = CylinderModel(f'ticker_{i}', radius=rad, height=1)
+            model.reparent_to(ticker)
             display = TickerDisplay(model, size, msg, outer=is_outer)
-            self.ticker_displays.append(display)
+            self.tickers.append(display)
 
-        self.ticker.reparent_to(self)
+        ticker.reparent_to(self.ticker_display)
 
     def change_message(self, msg):
         self.process = Process.DELETE
         self.next_msg = msg
 
-    def del_old_msg(self):
-        if all([t.del_msg(self.counter) for t in self.ticker_displays]):
+    def delete_old_msg(self):
+        if all([t.delete_msg(self.counter) for t in self.tickers]):
             self.counter = 0
             return True
+
         self.counter += 1
 
     def prepare_new_msg(self):
-        for t in self.ticker_displays:
-            t.prepare_image(self.next_msg)
+        for t in self.tickers:
+            t.prepare_for_display(self.next_msg)
 
         self.next_msg = None
 
-    def show_new_msg(self):
-        if all([t.show_msg(self.counter) for t in self.ticker_displays]):
+    def display_new_msg(self):
+        if all([t.display_msg(self.counter) for t in self.tickers]):
             self.counter = 0
             return True
+
         self.counter += 1
 
+    def rotate_display(self, dt):
+        for t in self.tickers:
+            t.move_letters(dt)
+
     def update(self, dt):
-        angle = dt * 20
-        # In this case, hprInterval is not good
-        self.ticker.set_h(self.ticker.get_h() - angle)
+        self.rotate_display(dt)
 
         match self.process:
 
             case Process.DELETE:
-                if self.del_old_msg():
+                if self.delete_old_msg():
                     self.process = Process.PREPARE
 
             case Process.PREPARE:
@@ -266,5 +262,5 @@ class CircularTicker(NodePath):
                 self.process = Process.DISPLAY
 
             case Process.DISPLAY:
-                if self.show_new_msg():
+                if self.display_new_msg():
                     self.process = None

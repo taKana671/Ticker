@@ -27,9 +27,9 @@ class DisplayMessage(ShowBase):
         self.display_root = NodePath('camera_root')
         self.display_root.reparent_to(self.render)
 
-        # self.ticker = CircularTicker()
+        self.ticker = CircularTicker()
         # self.ticker = SquareTicker()
-        self.ticker = VerticalTicker()
+        # self.ticker = VerticalTicker()
         self.ticker.reparent_to(self.display_root)
 
         self.create_display_region()
