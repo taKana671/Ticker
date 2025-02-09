@@ -1,54 +1,15 @@
 import struct
-from enum import Enum, auto
-from typing import NamedTuple
 
 import cv2
 import numpy as np
 
-from panda3d.core import NodePath, PandaNode
+from panda3d.core import NodePath
 from panda3d.core import Point3, Vec3, LColor, CardMaker
 from panda3d.core import Texture, TextureStage
-from direct.interval.LerpInterval import LerpTexOffsetInterval
-from panda3d.core import Spotlight
+# from direct.interval.LerpInterval import LerpTexOffsetInterval
 
-from lights import BasicAmbientLight
-from shapes.src import Box
-
-
-class Process(Enum):
-
-    DELETE = auto()
-    DISPLAY = auto()
-    PREPARE = auto()
-
-
-class Size(NamedTuple):
-
-    x: int
-    y: int
-    z: int
-
-    @property
-    def arr(self):
-        return (self.y, self.x, self.z)
-
-    @property
-    def row_length(self):
-        return self.x * self.z
-
-
-class BoxModel(NodePath):
-
-    def __init__(self, name, width, depth, height, **open_sides):
-        super().__init__(PandaNode(name))
-        self.model = Box(
-            width=width,
-            depth=depth,
-            height=height,
-            **open_sides
-        ).create()
-
-        self.model.reparent_to(self)
+from base_ticker import Process, Size, BaseTicker
+from models import BoxModel
 
 
 class TickerDisplay:
@@ -169,24 +130,19 @@ class TickerDisplay:
         self.next_img = np.ravel(img)
 
 
-class SquareTicker(NodePath):
+class SquareTicker(BaseTicker):
 
-    def __init__(self):
-        super().__init__(PandaNode('square_ticker'))
-        self.reparent_to(base.render)
-        self.set_pos_hpr(Point3(5, 5, -5), Vec3(90, 0, 0))
-        self.create_ticker()
-
+    def __init__(self, parent, msg, pos, hpr):
+        super().__init__('square_ticker', parent, pos, hpr)
         self.next_msg = None
         self.process = None
         self.counter = 0
+        self.create_ticker(msg)
 
-        # ambient_light = BasicAmbientLight()
-
-    def create_ticker(self):
+    def create_ticker(self, msg):
         # make building
         self.building = NodePath('building')
-        self.building.reparent_to(self)
+        self.building.reparent_to(self.root)
 
         model = BoxModel('building', width=10, depth=10, height=15)
         model.set_texture(base.loader.load_texture('textures/tile_05.jpg'))
@@ -217,7 +173,7 @@ class SquareTicker(NodePath):
         ticker.set_z(6)
         ticker.reparent_to(self.building)
 
-        msg = 'Panda3D'
+        # msg = 'Panda3D'
         size = Size(256 * 12, 256 * 2, 3)
         self.ticker = TickerDisplay(model, size, msg)
         # LerpTexOffsetInterval(model, 5, (1, 0), (0, 0)).loop()

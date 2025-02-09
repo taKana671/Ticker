@@ -1,58 +1,15 @@
 import random
-import struct
-from enum import Enum, auto
-from typing import NamedTuple
+
+import numpy as np
 from PIL import Image, ImageFont, ImageDraw, ImageOps
 
-from datetime import datetime
-
-import cv2
-import numpy as np
-
-from panda3d.core import NodePath, PandaNode
+from panda3d.core import NodePath
 from panda3d.core import Point3, Vec3, LColor, CardMaker
 from panda3d.core import Texture, TextureStage
-from direct.interval.LerpInterval import LerpTexOffsetInterval
-from panda3d.core import Spotlight
-from panda3d.core import PNMImage, PNMTextMaker
+# from direct.interval.LerpInterval import LerpTexOffsetInterval
 
-from shapes.src import Box, Plane
-
-
-class Process(Enum):
-
-    DELETE = auto()
-    DISPLAY = auto()
-    PREPARE = auto()
-
-
-class Size(NamedTuple):
-
-    x: int
-    y: int
-    z: int
-
-    @property
-    def arr(self):
-        return (self.y, self.x, self.z)
-
-    @property
-    def row_length(self):
-        return self.x * self.z
-
-
-class BoxModel(NodePath):
-
-    def __init__(self, name, width, depth, height, **open_sides):
-        super().__init__(PandaNode(name))
-        self.model = Box(
-            width=width,
-            depth=depth,
-            height=height,
-            **open_sides
-        ).create()
-
-        self.model.reparent_to(self)
+from base_ticker import Process, Size, BaseTicker
+from models import BoxModel
 
 
 class TickerDisplay:
@@ -166,21 +123,18 @@ class TickerDisplay:
         self.next_img = np.ravel(img)
 
 
-class VerticalTicker(NodePath):
+class VerticalTicker(BaseTicker):
 
-    def __init__(self):
-        super().__init__(PandaNode('vertical_ticker'))
-        self.reparent_to(base.render)
-        self.set_pos_hpr(Point3(5, 0, -3), Vec3(0, 0, 0))
-        self.create_ticker()
-
-        self.process = None
+    def __init__(self, parent, msg, pos, hpr):
+        super().__init__('vertical_ticker', parent, pos, hpr)
         self.next_msg = None
+        self.process = None
         self.counter = 0
+        self.create_ticker(msg)
 
-    def create_ticker(self):
+    def create_ticker(self, msg):
         self.building = NodePath('buildong')
-        self.building.reparent_to(self)
+        self.building.reparent_to(self.root)
 
         model = BoxModel('building', width=5, depth=5, height=10)
         model.set_texture(base.loader.load_texture('textures/tile_05.jpg'))
@@ -197,7 +151,7 @@ class VerticalTicker(NodePath):
         ticker.set_pos_hpr(Point3(0, 0, 0), Vec3(0, 90, 0))   # Point3(-0.45, 0, 0.0)
         ticker.reparent_to(frame)
 
-        msg = 'Panda3D'
+        # msg = 'Panda3D'
         size = Size(256 * 10, 256 * 2, 3)
         self.ticker = TickerDisplay(model, size, msg)
         # LerpTexOffsetInterval(model, 5, (1, 0), (0, 0)).loop()

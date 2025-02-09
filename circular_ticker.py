@@ -1,52 +1,14 @@
 import struct
-from enum import Enum, auto
-from typing import NamedTuple
 
 import cv2
 import numpy as np
 
-from panda3d.core import NodePath, PandaNode
+from panda3d.core import NodePath
 from panda3d.core import Point3, Vec3, LColor
 from panda3d.core import Texture
 
-from shapes.src import Cylinder
-from lights import BasicAmbientLight
-
-
-class Process(Enum):
-
-    DELETE = auto()
-    DISPLAY = auto()
-    PREPARE = auto()
-
-
-class Size(NamedTuple):
-
-    x: int
-    y: int
-    z: int
-
-    @property
-    def arr(self):
-        return (self.y, self.x, self.z)
-
-    @property
-    def row_length(self):
-        return self.x * self.z
-
-
-class CylinderModel(NodePath):
-
-    def __init__(self, name, radius, inner_radius=0, height=1, segs_top_cap=0, segs_bottom_cap=0):
-        super().__init__(PandaNode(name))
-        self.model = Cylinder(
-            radius=radius,
-            inner_radius=inner_radius,
-            height=height,
-            segs_top_cap=segs_top_cap,
-            segs_bottom_cap=segs_bottom_cap).create()
-
-        self.model.reparent_to(self)
+from base_ticker import Process, Size, BaseTicker
+from models import CylinderModel
 
 
 class TickerDisplay:
@@ -167,23 +129,18 @@ class TickerDisplay:
         self.next_img = np.ravel(img)
 
 
-class CircularTicker(NodePath):
+class CircularTicker(BaseTicker):
 
-    def __init__(self):
-        super().__init__(PandaNode('circular_ticker'))
-        self.reparent_to(base.render)
-        self.set_pos(Point3(0, 0, 0))
-        self.create_ticker()
-
+    def __init__(self, parent, msg, pos, hpr):
+        super().__init__('circular_ticker', parent, pos, hpr)
         self.next_msg = None
         self.process = None
         self.counter = 0
+        self.create_ticker(msg)
 
-        # ambient_light = BasicAmbientLight()
-
-    def create_ticker(self):
+    def create_ticker(self, msg):
         self.ticker_display = NodePath("ticker_display")
-        self.ticker_display.reparent_to(self)
+        self.ticker_display.reparent_to(self.root)
 
         framework = NodePath('framework')
         # framework.set_texture(base.loader.load_texture('textures/concrete_01.jpg'))
@@ -208,7 +165,7 @@ class CircularTicker(NodePath):
             model.reparent_to(framework)
 
         ticker = NodePath('ticker')
-        msg = 'Hello everyone! Lets study.'
+        # msg = 'Hello everyone! Lets study.'
         size = Size(256 * 20, 256 * 2, 3)
         self.tickers = []
 

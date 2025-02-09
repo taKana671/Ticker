@@ -27,10 +27,15 @@ class DisplayMessage(ShowBase):
         self.display_root = NodePath('camera_root')
         self.display_root.reparent_to(self.render)
 
-        self.ticker = CircularTicker()
-        # self.ticker = SquareTicker()
-        # self.ticker = VerticalTicker()
-        self.ticker.reparent_to(self.display_root)
+        # msg = 'Hello everyone! Lets study.'
+        # self.ticker = CircularTicker(self.display_root, msg, Point3(0, 0, 0), Vec3(0, 0, 0))
+
+        # msg = 'Panda3D'
+        # self.ticker = VerticalTicker(self.display_root, msg, Point3(5, 0, -3), Vec3(0, 0, 0))
+
+        msg = 'Panda3D'
+        self.ticker = SquareTicker(self.display_root, msg, Point3(5, 5, -5), Vec3(90, 0, 0))
+        # self.ticker.reparent_to(self.display_root)
 
         self.create_display_region()
         self.create_gui_region()
