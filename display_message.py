@@ -10,9 +10,9 @@ from panda3d.core import Shader, TextureStage, TransparencyAttrib
 from direct.gui.DirectGui import DirectFrame, DirectLabel, DirectEntry
 from direct.showbase.ShowBaseGlobal import globalClock
 
-from circular_ticker import CircularTicker
-from square_ticker import SquareTicker
-from vertical_ticker import VerticalTicker
+from tickers.circular_ticker import CircularTicker
+from tickers.square_ticker import SquareTicker
+from tickers.vertical_ticker import VerticalTicker
 
 
 class DisplayMessage(ShowBase):
@@ -30,11 +30,11 @@ class DisplayMessage(ShowBase):
         # msg = 'Hello everyone! Lets study.'
         # self.ticker = CircularTicker(self.display_root, msg, Point3(0, 0, 0), Vec3(0, 0, 0))
 
-        # msg = 'Panda3D'
-        # self.ticker = VerticalTicker(self.display_root, msg, Point3(5, 0, -3), Vec3(0, 0, 0))
-
         msg = 'Panda3D'
-        self.ticker = SquareTicker(self.display_root, msg, Point3(5, 5, -5), Vec3(90, 0, 0))
+        self.ticker = VerticalTicker(self.display_root, msg, Point3(5, 0, -3), Vec3(0, 0, 0))
+
+        # msg = 'Panda3D'
+        # self.ticker = SquareTicker(self.display_root, msg, Point3(5, 5, -5), Vec3(90, 0, 0))
         # self.ticker.reparent_to(self.display_root)
 
         self.create_display_region()
