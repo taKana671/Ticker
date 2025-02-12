@@ -8,9 +8,8 @@ from .models import CylinderModel
 
 class CircularTicker(BaseTicker):
 
-    def __init__(self, parent, msg, pos, hpr):
-        super().__init__('circular_ticker', parent, pos, hpr)
-        self.next_msg = None
+    def __init__(self, msg):
+        super().__init__('circular_ticker')
         self.process = None
         self.counter = 0
         self.create_ticker(msg)
@@ -20,8 +19,7 @@ class CircularTicker(BaseTicker):
         self.ticker_display.reparent_to(self.root)
 
         framework = NodePath('framework')
-        # framework.set_texture(base.loader.load_texture('textures/concrete_01.jpg'))
-        framework.set_color(LColor(0.5, 0.5, 0.5, 1.0))
+        framework.set_texture(base.loader.load_texture('textures/concrete_01.jpg'))
         framework.reparent_to(self.ticker_display)
 
         rad = 4.48

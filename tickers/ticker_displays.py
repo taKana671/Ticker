@@ -49,8 +49,8 @@ class SquareDisplay(Ticker):
 
     def display_settings(self):
         self.font_face = cv2.FONT_HERSHEY_COMPLEX
-        self.pixel_height = 80
-        self.thickness = 6
+        self.pixel_height = 120  # 80
+        self.thickness = 12  # 6
 
         self.scale = cv2.getFontScaleFromHeight(
             self.font_face, self.pixel_height, self.thickness)
@@ -143,9 +143,9 @@ class CircularDisplay(Ticker):
         super().__init__(model, size, msg, outer=outer)
 
     def display_settings(self, outer):
-        self.font_face = cv2.FONT_HERSHEY_DUPLEX
-        self.pixel_height = 60
-        self.thickness = 3
+        self.font_face = cv2.FONT_HERSHEY_SIMPLEX
+        self.pixel_height = 80
+        self.thickness = 10
 
         self.scale = cv2.getFontScaleFromHeight(
             self.font_face, self.pixel_height, self.thickness)
@@ -192,7 +192,7 @@ class CircularDisplay(Ticker):
                     (0, y),
                     (self.size.x, y),
                     self.line_color,
-                    thickness=6,
+                    thickness=20,
                     lineType=cv2.LINE_AA
                 )
 

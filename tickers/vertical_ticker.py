@@ -9,8 +9,8 @@ from .models import BoxModel
 
 class VerticalTicker(BaseTicker):
 
-    def __init__(self, parent, msg, pos, hpr):
-        super().__init__('vertical_ticker', parent, pos, hpr)
+    def __init__(self, msg):
+        super().__init__('vertical_ticker')
         self.next_msg = None
         self.process = None
         self.counter = 0
@@ -24,6 +24,15 @@ class VerticalTicker(BaseTicker):
         model.set_texture(base.loader.load_texture('textures/tile_05.jpg'))
         model.reparent_to(self.building)
 
+        billboard = NodePath('billboard')
+        billboard.reparent_to(self.building)
+        billboard.set_z(2.5)
+        card = CardMaker('card')
+        card.set_frame(-2, 2, -2, 2)
+        board = billboard.attach_new_node(card.generate())
+        board.set_pos_hpr(Point3(-2.55, 0, 0), Vec3(270, 0, 0))
+        board.set_texture(base.loader.load_texture('textures/sleeping_panda.png'))
+
         frame = BoxModel('frame', width=1, depth=1.2, height=5)
         frame.set_texture(base.loader.load_texture('textures/concrete_01.jpg'))
         frame.set_pos(Point3(-2, -3.1, 2))
@@ -32,7 +41,7 @@ class VerticalTicker(BaseTicker):
         ticker = NodePath('ticker')
         model = BoxModel('ticker_display', width=1.2, depth=4.8, height=1, open_top=True, open_bottom=True)
         model.reparent_to(ticker)
-        ticker.set_pos_hpr(Point3(0, 0, 0), Vec3(0, 90, 0))   # Point3(-0.45, 0, 0.0)
+        ticker.set_pos_hpr(Point3(0, 0, 0), Vec3(0, 90, 0))
         ticker.reparent_to(frame)
 
         size = Size(256 * 10, 256 * 2, 3)

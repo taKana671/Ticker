@@ -28,13 +28,17 @@ class Size(NamedTuple):
 
 class BaseTicker:
 
-    def __init__(self, name, parent, pos, hpr):
+    def __init__(self, name):
         self.root = NodePath(PandaNode(name))
-        self.root.set_pos_hpr(pos, hpr)
-        self.root.reparent_to(parent)
 
     def __init_subclass__(cls, *kwargs):
         super().__init_subclass__(*kwargs)
         for method in ('create_ticker', 'change_message', 'update'):
             if method not in cls.__dict__:
                 raise NotImplementedError(f"Subclasses must implement the {method} method.")
+
+    def set_pos_hpr(self, pos, hpr):
+        self.root.set_pos_hpr(pos, hpr)
+
+    def reparent_to(self, parent):
+        self.root.reparent_to(parent)
