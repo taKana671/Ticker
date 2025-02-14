@@ -1,5 +1,5 @@
 from panda3d.core import NodePath
-from panda3d.core import Point3, Vec3, LColor
+from panda3d.core import Point3, Vec3
 
 from .base_ticker import Process, Size, BaseTicker
 from .ticker_displays import CircularDisplay
@@ -10,8 +10,6 @@ class CircularTicker(BaseTicker):
 
     def __init__(self, msg):
         super().__init__('circular_ticker')
-        self.process = None
-        self.counter = 0
         self.create_ticker(msg)
 
     def create_ticker(self, msg):
@@ -52,8 +50,9 @@ class CircularTicker(BaseTicker):
         ticker.reparent_to(self.ticker_display)
 
     def change_message(self, msg):
-        self.process = Process.DELETE
-        self.next_msg = msg
+        if not self.process:
+            self.process = Process.DELETE
+            self.next_msg = msg
 
     def delete_old_msg(self):
         if all([t.delete_msg(self.counter) for t in self.tickers]):

@@ -11,9 +11,6 @@ class VerticalTicker(BaseTicker):
 
     def __init__(self, msg):
         super().__init__('vertical_ticker')
-        self.next_msg = None
-        self.process = None
-        self.counter = 0
         self.create_ticker(msg)
 
     def create_ticker(self, msg):
@@ -49,9 +46,10 @@ class VerticalTicker(BaseTicker):
         # LerpTexOffsetInterval(model, 5, (1, 0), (0, 0)).loop()
 
     def change_message(self, msg):
-        self.ticker.prepare_for_deletion()
-        self.process = Process.DELETE
-        self.next_msg = msg
+        if not self.process:
+            self.ticker.prepare_for_deletion()
+            self.process = Process.DELETE
+            self.next_msg = msg
 
     def prepare_new_msg(self):
         self.ticker.prepare_for_display(self.next_msg)

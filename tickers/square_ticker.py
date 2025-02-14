@@ -9,11 +9,8 @@ from .models import BoxModel
 
 class SquareTicker(BaseTicker):
 
-    def __init__(self, msg):  #  , pos, hpr):
-        super().__init__('square_ticker')  #, parent, pos, hpr)
-        self.next_msg = None
-        self.process = None
-        self.counter = 0
+    def __init__(self, msg):
+        super().__init__('square_ticker')
         self.create_ticker(msg)
 
     def create_ticker(self, msg):
@@ -55,8 +52,9 @@ class SquareTicker(BaseTicker):
         # LerpTexOffsetInterval(model, 5, (1, 0), (0, 0)).loop()
 
     def change_message(self, msg):
-        self.process = Process.DELETE
-        self.next_msg = msg
+        if not self.process:
+            self.process = Process.DELETE
+            self.next_msg = msg
 
     def delete_old_msg(self):
         if self.ticker.delete_msg(self.counter):

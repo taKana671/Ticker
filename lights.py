@@ -44,3 +44,20 @@ class BasicDayLight(NodePath):
             color = LColor(1, 1, 1, 1)
 
         self.node().set_color(color)
+
+
+# spot_light = base.render.attach_new_node(Spotlight('spotlight'))
+# spot_light.node().set_color(LColor(1, 1, 1, 1))
+# spot_light.node().set_attenuation(Vec3(0, 0, 0.001))
+# # spot_light.node().set_attenuation(Vec3(0, 0, 0.1))
+# spot_light.node().set_exponent(50)
+# # spot_light.node().set_attenuation(Vec3(1, 0, 0))
+# # spot_light.node().set_exponent(20)
+# spot_light.node().get_lens().set_fov(30)
+# spot_light.node().get_lens().set_near_far(1, 10)
+# spot_light.set_pos_hpr(self.building, Vec3(-5.6, 0, 8), Vec3(90, -90, 0))
+# spot_light.node().show_frustum()
+# spot_light.node().set_shadow_caster(True)
+# # base.render.set_light(spot_light)
+# # base.render.setShaderAuto()
+# board.set_light(spot_light)

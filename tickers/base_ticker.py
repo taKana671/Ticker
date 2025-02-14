@@ -30,6 +30,9 @@ class BaseTicker:
 
     def __init__(self, name):
         self.root = NodePath(PandaNode(name))
+        self.next_msg = None
+        self.process = None
+        self.counter = 0
 
     def __init_subclass__(cls, *kwargs):
         super().__init_subclass__(*kwargs)
