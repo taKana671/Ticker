@@ -1,6 +1,5 @@
 from panda3d.core import NodePath
 from panda3d.core import Point3, Vec3, CardMaker
-# from direct.interval.LerpInterval import LerpTexOffsetInterval
 
 from .base_ticker import Process, Size, BaseTicker
 from .ticker_displays import VerticalDisplay
@@ -43,7 +42,6 @@ class VerticalTicker(BaseTicker):
 
         size = Size(256 * 10, 256 * 2, 3)
         self.ticker = VerticalDisplay(model, size, msg)
-        # LerpTexOffsetInterval(model, 5, (1, 0), (0, 0)).loop()
 
     def change_message(self, msg):
         if not self.process:

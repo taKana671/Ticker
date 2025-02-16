@@ -15,6 +15,7 @@ from tickers.circular_ticker import CircularTicker
 from tickers.square_ticker import SquareTicker
 from tickers.vertical_ticker import VerticalTicker
 
+from lights import BasicAmbientLight
 
 load_prc_file_data("", """
     framebuffer-multisample 1
@@ -33,6 +34,8 @@ class DisplayMessage(ShowBase):
         self.create_2d_region()
         self.create_tickers()
         self.gui = Gui()
+
+        self.ambient_light = BasicAmbientLight()
 
         self.accept('escape', sys.exit)
         self.taskMgr.add(self.update, 'update')

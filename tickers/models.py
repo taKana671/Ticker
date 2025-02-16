@@ -29,3 +29,12 @@ class CylinderModel(NodePath):
             segs_bottom_cap=segs_bottom_cap).create()
 
         self.model.reparent_to(self)
+
+
+class LampShade(NodePath):
+
+    def __init__(self, name, scale=0.3):
+        super().__init__(PandaNode(name))
+        model = base.loader.load_model('models/stagespotlight/stagespotlight')
+        model.reparent_to(self)
+        self.set_scale(scale)
