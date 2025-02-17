@@ -11,11 +11,10 @@ from panda3d.core import OrthographicLens, Camera, MouseWatcher, PGTop
 from panda3d.core import TransparencyAttrib, AntialiasAttrib
 from panda3d.core import load_prc_file_data
 
+from lights import BasicAmbientLight
 from tickers.circular_ticker import CircularTicker
 from tickers.square_ticker import SquareTicker
 from tickers.vertical_ticker import VerticalTicker
-
-from lights import BasicAmbientLight
 
 load_prc_file_data("", """
     framebuffer-multisample 1
