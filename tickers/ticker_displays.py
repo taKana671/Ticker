@@ -1,4 +1,3 @@
-import random
 import struct
 
 import cv2
@@ -307,7 +306,7 @@ class VerticalDisplay(Ticker):
     def find_text_elements(self, img):
         idxes = np.where(~np.all(img == self.bg_color, axis=2))
         text_elems = list(zip(idxes[0], idxes[1]))
-        random.shuffle(text_elems)
+        np.random.shuffle(text_elems)
         return text_elems
 
     def prepare_for_deletion(self):

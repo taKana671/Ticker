@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from enum import Enum, auto
 from typing import NamedTuple
 
@@ -26,7 +27,7 @@ class Size(NamedTuple):
         return self.x * self.z
 
 
-class BaseTicker:
+class BaseTicker(ABC):
 
     def __init__(self, name):
         self.root = NodePath(PandaNode(name))
@@ -34,11 +35,20 @@ class BaseTicker:
         self.process = None
         self.counter = 0
 
-    def __init_subclass__(cls, *kwargs):
-        super().__init_subclass__(*kwargs)
-        for method in ('create_ticker', 'change_message', 'update'):
-            if method not in cls.__dict__:
-                raise NotImplementedError(f"Subclasses must implement the {method} method.")
+    @abstractmethod
+    def create_ticker(self, msg):
+        """Create ticker.
+        """
+
+    @abstractmethod
+    def change_message(self, msg):
+        """If a message is typed in the entry, starts processing.
+        """
+
+    @abstractmethod
+    def update(self, dt):
+        """Update ticker display.
+        """
 
     def set_pos_hpr(self, pos, hpr):
         self.root.set_pos_hpr(pos, hpr)

@@ -1,12 +1,12 @@
 from panda3d.core import NodePath
-from panda3d.core import Point3, Vec3, CardMaker
+from panda3d.core import Point3, Vec3, LColor, CardMaker
 # from direct.interval.LerpInterval import LerpTexOffsetInterval
 
 from .base_ticker import Process, Size, BaseTicker
 from .ticker_displays import SquareDisplay
 from .models import BoxModel, LampShade
-
 from lights import BasicSpotlight
+
 
 
 class SquareTicker(BaseTicker):
@@ -47,22 +47,23 @@ class SquareTicker(BaseTicker):
         # Or after VerticalTiker class is instanced, parent spot_lignt to base.render and position it
         # like spot_light.set_pos_hpr(lamp_shade, Point3(0, 0, 0), Vec3(0, 0, 0))
         lamp_shades = [
-            [Point3(-5.2, -3.8, 4.8), Vec3(0, -60, 0)],
-            [Point3(-5.2, 3.8, 4.8), Vec3(0, -120, 0)],
-            # [Point3(-3.8, 5.2, 4.8), Vec3(270, -60, 0)],
-            # [Point3(3.8, 5.2, 4.8), Vec3(270, -120, 0)]
+            [Point3(-5.2, -2.3, 4.8), Vec3(0, -60, 0)],
+            [Point3(-5.2, 2.3, 4.8), Vec3(0, -120, 0)]
         ]
-
         for pos, hpr in lamp_shades:
             lamp_shade = LampShade('lamp_shade1')
             lamp_shade.set_pos_hpr(pos, hpr)
             lamp_shade.reparent_to(self.building)
 
-        spot_light = BasicSpotlight(fov=80)
-        spot_light.reparent_to(self.building)
-        spot_light.set_pos_hpr(Point3(-10, 0, 2), Vec3(-90, 10, 0))
-        spot_light.setup_light(board)
-        # Point3(-10, 0, 2), Vec3(-90, 10, 0)
+        lights = [
+            [Point3(-9, -3.5, 5.5), Vec3(-60, -30, 0)],
+            [Point3(-9, 3.5, 5.5), Vec3(-120, -30, 0)]
+        ]
+        for pos, hpr in lights:
+            spot_light = BasicSpotlight(LColor(1, 1, 0, 1), fov=30, far=3)
+            spot_light.reparent_to(self.building)
+            spot_light.set_pos_hpr(pos, hpr)
+            spot_light.setup_light(board)
 
         # make ticker display
         ticker = NodePath('ticker')
@@ -75,7 +76,7 @@ class SquareTicker(BaseTicker):
         self.ticker = SquareDisplay(model, size, msg)
         # LerpTexOffsetInterval(model, 5, (1, 0), (0, 0)).loop()
 
-    def change_message(self, msg):
+    def change_message2(self, msg):
         if not self.process:
             self.process = Process.DELETE
             self.next_msg = msg
