@@ -6,7 +6,7 @@ The texts in the images are drawn by NumPy, cv2 and pillow.
 
 When tried changing pixel values of the blue circular ticker display while shifting its image by using Intervals of Panda3D, the color change did not go well, resulting in lots of red, green, yellow pixels and no texts.It took many days to finally understand that I need to shift the image at every frame update in the method added by Pnada3D TaskMgr.
 
-https://github.com/user-attachments/assets/f9b140c1-8dbb-4f54-9513-0d9cf4a87800
+https://github.com/user-attachments/assets/00d25dc3-9cca-427a-84ec-d399ded79208
 
 # Requirements
 * Panda3D                1.10.15
