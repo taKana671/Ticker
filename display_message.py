@@ -44,7 +44,7 @@ class DisplayMessage(ShowBase):
         self.scene.reparent_to(self.render)
         self.tickers = {}
 
-        c_ticker = CircularTicker('Hello everyone! Lets study.')
+        c_ticker = CircularTicker('Enjoy 3D programming.')
         c_ticker.set_pos_hpr(Point3(-2.5, -1, 1), Vec3(0, 0, 0))
         c_ticker.reparent_to(self.render)
         self.tickers['c'] = c_ticker
