@@ -3,7 +3,7 @@ I made this repository because I wanted to dynamically generate images to use th
 To make ticker displays look like moving, the generated images are shifted gradually.
 By operating NumPy.ndarray and memoryview, pixel values are partly got and changed to replace messages. 
 The texts in the images are drawn by NumPy, cv2 and pillow.
-When tried changing pixel values while shifting images by using Intervals of Panda3D, the memoryview does not work at all.
+When tried changing pixel values of the blue circular ticker display while shifting images by using Intervals of Panda3D, the color change did not go well.
 It took many days to finally understand that I need to shift images at every frame update in the method added by Pnada3D TaskMgr.
 
 # Requirements
