@@ -8,13 +8,15 @@ from direct.showbase.ShowBaseGlobal import globalClock
 from panda3d.core import NodePath, TextNode
 from panda3d.core import Point3, Vec3, LColor, Vec4
 from panda3d.core import OrthographicLens, Camera, MouseWatcher, PGTop
-from panda3d.core import TransparencyAttrib, AntialiasAttrib
+from panda3d.core import TransparencyAttrib, AntialiasAttrib, TexGenAttrib
 from panda3d.core import load_prc_file_data
+from panda3d.core import TextureStage
 
 from lights import BasicAmbientLight
 from tickers.circular_ticker import CircularTicker
 from tickers.square_ticker import SquareTicker
 from tickers.vertical_ticker import VerticalTicker
+from shapes.src import Sphere
 
 load_prc_file_data("", """
     framebuffer-multisample 1
@@ -32,6 +34,7 @@ class DisplayMessage(ShowBase):
         self.create_3d_region()
         self.create_2d_region()
         self.create_tickers()
+        self.create_sky()
         self.gui = Gui()
 
         self.ambient_light = BasicAmbientLight()
@@ -58,6 +61,23 @@ class DisplayMessage(ShowBase):
         v_ticker.set_pos_hpr(Point3(8.5, 2.5, 0), Vec3(35, 0, 0))
         v_ticker.reparent_to(self.render)
         self.tickers['v'] = v_ticker
+
+    def create_sky(self):
+        np = NodePath('skybox')
+        np.reparent_to(self.render)
+        sphere = Sphere(radius=500).create()
+        sphere.set_pos(Point3(45, 0, -350))
+        sphere.reparent_to(np)
+
+        ts = TextureStage.get_default()
+        sphere.set_tex_gen(ts, TexGenAttrib.M_world_cube_map)
+        sphere.set_tex_hpr(ts, (0, 180, 0))
+        sphere.set_tex_scale(ts, (1, -1))
+
+        sphere.set_light_off()
+        sphere.set_material_off()
+        imgs = base.loader.load_cube_map('textures/skybox/img_#.png')
+        sphere.set_texture(imgs)
 
     def calc_aspect_ratio(self, display_region):
         """Args:
