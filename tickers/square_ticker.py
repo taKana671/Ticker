@@ -76,7 +76,7 @@ class SquareTicker(BaseTicker):
         self.ticker = SquareDisplay(model, size, msg)
         # LerpTexOffsetInterval(model, 5, (1, 0), (0, 0)).loop()
 
-    def change_message2(self, msg):
+    def change_message(self, msg):
         if not self.process:
             self.process = Process.DELETE
             self.next_msg = msg
