@@ -16,7 +16,7 @@ from lights import BasicAmbientLight
 from tickers.circular_ticker import CircularTicker
 from tickers.square_ticker import SquareTicker
 from tickers.vertical_ticker import VerticalTicker
-from shapes.src import Sphere
+from shapes import Sphere
 
 load_prc_file_data("", """
     framebuffer-multisample 1

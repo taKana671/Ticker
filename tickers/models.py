@@ -1,6 +1,6 @@
 from panda3d.core import NodePath, PandaNode
 
-from shapes.src import Box, Cylinder
+from shapes import Box, Cylinder
 
 
 class BoxModel(NodePath):
