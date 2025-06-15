@@ -21,6 +21,12 @@ https://github.com/user-attachments/assets/00d25dc3-9cca-427a-84ec-d399ded79208
 
 
 # Usage
+
+* Clone this repository with submodule.
+```
+git clone --recursive https://github.com/taKana671/Ticker.git
+```
+
 * Execute a command below on your command line.
 ```
 >>>python display_message.py
